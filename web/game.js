@@ -648,6 +648,24 @@
   const shellCasings = [];  // First-person ejected spinning brass casings & shotgun hulls
   const muzzleSmoke = [];   // First-person rising gunsmoke puffs from hot barrel & chamber
   const keys = {};
+  const touchState = {
+    moveX: 0,
+    moveY: 0,
+    crouchToggle: false,
+    joyTouchId: null,
+    joyOriginX: 0,
+    joyOriginY: 0,
+    lookTouchId: null,
+    lookLastX: 0,
+    lookLastY: 0,
+    fireTouchId: null,
+    fireLastX: 0,
+    fireLastY: 0,
+  };
+
+  if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    document.body.classList.add('touch-enabled');
+  }
 
   function resetAllAmmo() {
     player.ammo = {};
@@ -1158,7 +1176,17 @@
       </div>
     `).join('');
     hudWeaponSlots.querySelectorAll('[data-slot]').forEach((el) => {
-      el.onclick = () => switchWeapon(parseInt(el.getAttribute('data-slot'), 10));
+      const idx = parseInt(el.getAttribute('data-slot'), 10);
+      el.onclick = () => switchWeapon(idx);
+      el.addEventListener(
+        'touchstart',
+        (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          switchWeapon(idx);
+        },
+        { passive: false }
+      );
     });
   }
 
@@ -1208,7 +1236,20 @@
     player.weaponIndex = 0;
     player.isAiming = false;
     player.isReloading = false;
+    player.isFiring = false;
     player.hurtAlpha = 0;
+    touchState.moveX = 0;
+    touchState.moveY = 0;
+    touchState.crouchToggle = false;
+    touchState.joyTouchId = null;
+    touchState.lookTouchId = null;
+    touchState.fireTouchId = null;
+    const crouchBtn = document.getElementById('btnMobileCrouch');
+    if (crouchBtn) crouchBtn.classList.remove('active');
+    const scopeBtn = document.getElementById('btnMobileScope');
+    if (scopeBtn) scopeBtn.classList.remove('active');
+    const joyKnob = document.getElementById('mobileJoystickKnob');
+    if (joyKnob) joyKnob.style.transform = 'translate(0px, 0px)';
     resetAllAmmo();
 
     resetEnemyState(0, -92, performance.now());
@@ -1226,15 +1267,24 @@
     renderWeaponSlotBar();
     updateHUD();
 
-    if (canvas.requestPointerLock) {
-      canvas.requestPointerLock();
+    if (!document.body.classList.contains('touch-enabled') && canvas.requestPointerLock) {
+      try {
+        canvas.requestPointerLock();
+      } catch (_) {}
     }
   }
 
   function leaveMatchToMenu() {
     match.active = false;
     match.ended = false;
-    if (document.exitPointerLock) document.exitPointerLock();
+    player.isFiring = false;
+    touchState.moveX = 0;
+    touchState.moveY = 0;
+    if (document.exitPointerLock) {
+      try {
+        document.exitPointerLock();
+      } catch (_) {}
+    }
     hudScreen.classList.add('hidden');
     mainMenuScreen.classList.remove('hidden');
     renderActiveMenuPanel();
@@ -1242,6 +1292,24 @@
 
   document.getElementById('btnLeaveMatch').onclick = leaveMatchToMenu;
   document.getElementById('btnMatchEndReturn').onclick = leaveMatchToMenu;
+
+  const btnMobileFullscreen = document.getElementById('btnMobileFullscreen');
+  if (btnMobileFullscreen) {
+    btnMobileFullscreen.onclick = () => {
+      playSound('ui');
+      const docEl = document.documentElement;
+      if (!document.fullscreenElement) {
+        if (docEl.requestFullscreen) {
+          docEl.requestFullscreen().catch(() => {});
+        }
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(() => {});
+        }
+      } else if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    };
+  }
 
   /**
    * MANDATORY 120-SECOND (2-MINUTE) ARENA ROTATION:
@@ -1748,6 +1816,305 @@
   });
 
   // --------------------------------------------------------------------------
+  // 11B. MOBILE MULTI-TOUCH FPS CONTROLS (JOYSTICK, 360° AIM PAD & TRIGGERS)
+  // --------------------------------------------------------------------------
+  window.addEventListener(
+    'touchstart',
+    () => {
+      document.body.classList.add('touch-enabled');
+      ensureAudio();
+    },
+    { passive: true }
+  );
+
+  const joyZone = document.getElementById('mobileJoystickZone');
+  const joyBase = document.getElementById('mobileJoystickBase');
+  const joyKnob = document.getElementById('mobileJoystickKnob');
+  const lookZone = document.getElementById('mobileLookZone');
+  const btnMobileFire = document.getElementById('btnMobileFire');
+  const btnMobileFireLeft = document.getElementById('btnMobileFireLeft');
+  const btnMobileScope = document.getElementById('btnMobileScope');
+  const btnMobileReload = document.getElementById('btnMobileReload');
+  const btnMobileJump = document.getElementById('btnMobileJump');
+  const btnMobileCrouch = document.getElementById('btnMobileCrouch');
+
+  function updateJoystickFromTouch(clientX, clientY) {
+    const dx = clientX - touchState.joyOriginX;
+    const dy = clientY - touchState.joyOriginY;
+    const maxR = 42;
+    const dist = Math.hypot(dx, dy);
+    const clampedDist = Math.min(maxR, dist);
+    const angle = Math.atan2(dy, dx);
+    const kx = Math.cos(angle) * clampedDist;
+    const ky = Math.sin(angle) * clampedDist;
+
+    touchState.moveX = kx / maxR;
+    touchState.moveY = ky / maxR;
+    if (joyKnob) {
+      joyKnob.style.transform = `translate(${kx.toFixed(1)}px, ${ky.toFixed(1)}px)`;
+    }
+  }
+
+  function resetJoystick() {
+    touchState.joyTouchId = null;
+    touchState.moveX = 0;
+    touchState.moveY = 0;
+    if (joyKnob) {
+      joyKnob.style.transform = 'translate(0px, 0px)';
+    }
+  }
+
+  if (joyZone) {
+    joyZone.addEventListener(
+      'touchstart',
+      (e) => {
+        if (!match.active || match.ended) return;
+        e.preventDefault();
+        ensureAudio();
+        const t = e.changedTouches[0];
+        if (!t) return;
+        touchState.joyTouchId = t.identifier;
+        if (joyBase) {
+          const rect = joyBase.getBoundingClientRect();
+          touchState.joyOriginX = rect.left + rect.width * 0.5;
+          touchState.joyOriginY = rect.top + rect.height * 0.5;
+        } else {
+          touchState.joyOriginX = t.clientX;
+          touchState.joyOriginY = t.clientY;
+        }
+        updateJoystickFromTouch(t.clientX, t.clientY);
+      },
+      { passive: false }
+    );
+
+    joyZone.addEventListener(
+      'touchmove',
+      (e) => {
+        if (touchState.joyTouchId === null) return;
+        e.preventDefault();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          const t = e.changedTouches[i];
+          if (t.identifier === touchState.joyTouchId) {
+            updateJoystickFromTouch(t.clientX, t.clientY);
+            break;
+          }
+        }
+      },
+      { passive: false }
+    );
+
+    const endJoy = (e) => {
+      if (touchState.joyTouchId === null) return;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === touchState.joyTouchId) {
+          resetJoystick();
+          break;
+        }
+      }
+    };
+    joyZone.addEventListener('touchend', endJoy, { passive: false });
+    joyZone.addEventListener('touchcancel', endJoy, { passive: false });
+  }
+
+  function applyTouchLookDelta(dx, dy) {
+    const sens = (profile.settings.sensitivity || 0.5) * (player.isAiming ? 0.0042 : 0.0086);
+    player.yaw += dx * sens;
+    player.pitch = Math.max(-0.62, Math.min(0.62, player.pitch - dy * sens));
+  }
+
+  if (lookZone) {
+    lookZone.addEventListener(
+      'touchstart',
+      (e) => {
+        if (!match.active || match.ended) return;
+        e.preventDefault();
+        ensureAudio();
+        const t = e.changedTouches[0];
+        if (!t) return;
+        touchState.lookTouchId = t.identifier;
+        touchState.lookLastX = t.clientX;
+        touchState.lookLastY = t.clientY;
+      },
+      { passive: false }
+    );
+
+    lookZone.addEventListener(
+      'touchmove',
+      (e) => {
+        if (touchState.lookTouchId === null || !match.active || match.ended) return;
+        e.preventDefault();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          const t = e.changedTouches[i];
+          if (t.identifier === touchState.lookTouchId) {
+            const dx = t.clientX - touchState.lookLastX;
+            const dy = t.clientY - touchState.lookLastY;
+            touchState.lookLastX = t.clientX;
+            touchState.lookLastY = t.clientY;
+            applyTouchLookDelta(dx, dy);
+            break;
+          }
+        }
+      },
+      { passive: false }
+    );
+
+    const endLook = (e) => {
+      if (touchState.lookTouchId === null) return;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === touchState.lookTouchId) {
+          touchState.lookTouchId = null;
+          break;
+        }
+      }
+    };
+    lookZone.addEventListener('touchend', endLook, { passive: false });
+    lookZone.addEventListener('touchcancel', endLook, { passive: false });
+  }
+
+  // Right Fire Button (Hold to Spray + Drag Thumb to Aim Simultaneously!)
+  if (btnMobileFire) {
+    btnMobileFire.addEventListener(
+      'touchstart',
+      (e) => {
+        if (!match.active || match.ended) return;
+        e.preventDefault();
+        e.stopPropagation();
+        ensureAudio();
+        btnMobileFire.classList.add('active');
+        const t = e.changedTouches[0];
+        if (t) {
+          touchState.fireTouchId = t.identifier;
+          touchState.fireLastX = t.clientX;
+          touchState.fireLastY = t.clientY;
+        }
+        player.isFiring = true;
+        attemptShoot();
+      },
+      { passive: false }
+    );
+
+    btnMobileFire.addEventListener(
+      'touchmove',
+      (e) => {
+        if (touchState.fireTouchId === null || !match.active || match.ended) return;
+        e.preventDefault();
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          const t = e.changedTouches[i];
+          if (t.identifier === touchState.fireTouchId) {
+            const dx = t.clientX - touchState.fireLastX;
+            const dy = t.clientY - touchState.fireLastY;
+            touchState.fireLastX = t.clientX;
+            touchState.fireLastY = t.clientY;
+            applyTouchLookDelta(dx, dy);
+            break;
+          }
+        }
+      },
+      { passive: false }
+    );
+
+    const endFireRight = (e) => {
+      e.preventDefault();
+      btnMobileFire.classList.remove('active');
+      touchState.fireTouchId = null;
+      player.isFiring = false;
+    };
+    btnMobileFire.addEventListener('touchend', endFireRight, { passive: false });
+    btnMobileFire.addEventListener('touchcancel', endFireRight, { passive: false });
+  }
+
+  // Left Fire Button (Claw / Secondary Trigger)
+  if (btnMobileFireLeft) {
+    btnMobileFireLeft.addEventListener(
+      'touchstart',
+      (e) => {
+        if (!match.active || match.ended) return;
+        e.preventDefault();
+        e.stopPropagation();
+        ensureAudio();
+        btnMobileFireLeft.classList.add('active');
+        player.isFiring = true;
+        attemptShoot();
+      },
+      { passive: false }
+    );
+    const endFireLeft = (e) => {
+      e.preventDefault();
+      btnMobileFireLeft.classList.remove('active');
+      player.isFiring = false;
+    };
+    btnMobileFireLeft.addEventListener('touchend', endFireLeft, { passive: false });
+    btnMobileFireLeft.addEventListener('touchcancel', endFireLeft, { passive: false });
+  }
+
+  if (btnMobileScope) {
+    btnMobileScope.addEventListener(
+      'touchstart',
+      (e) => {
+        if (!match.active || match.ended) return;
+        e.preventDefault();
+        e.stopPropagation();
+        ensureAudio();
+        player.isAiming = !player.isAiming;
+        btnMobileScope.classList.toggle('active', player.isAiming);
+        const w = WEAPONS[player.weaponIndex];
+        if (w.useScope && player.isAiming) {
+          document.getElementById('sniperScopeOverlay').classList.remove('hidden');
+        } else {
+          document.getElementById('sniperScopeOverlay').classList.add('hidden');
+        }
+      },
+      { passive: false }
+    );
+  }
+
+  if (btnMobileReload) {
+    btnMobileReload.addEventListener(
+      'touchstart',
+      (e) => {
+        if (!match.active || match.ended) return;
+        e.preventDefault();
+        e.stopPropagation();
+        ensureAudio();
+        reloadWeapon();
+      },
+      { passive: false }
+    );
+  }
+
+  if (btnMobileJump) {
+    btnMobileJump.addEventListener(
+      'touchstart',
+      (e) => {
+        if (!match.active || match.ended) return;
+        e.preventDefault();
+        e.stopPropagation();
+        ensureAudio();
+        if (player.grounded) {
+          player.vy = 21.5;
+          player.grounded = false;
+        }
+      },
+      { passive: false }
+    );
+  }
+
+  if (btnMobileCrouch) {
+    btnMobileCrouch.addEventListener(
+      'touchstart',
+      (e) => {
+        if (!match.active || match.ended) return;
+        e.preventDefault();
+        e.stopPropagation();
+        ensureAudio();
+        touchState.crouchToggle = !touchState.crouchToggle;
+        btnMobileCrouch.classList.toggle('active', touchState.crouchToggle);
+      },
+      { passive: false }
+    );
+  }
+
+  // --------------------------------------------------------------------------
   // 12. TRUE 3D SHADED POLYGON & CS 1.6 BOX RENDERER
   // --------------------------------------------------------------------------
   function resizeCanvas() {
@@ -2112,8 +2479,10 @@
         player.recoilSprayShots = Math.max(0, player.recoilSprayShots - dt * 18);
       }
 
-      player.crouching = !!(keys['ControlLeft'] || keys['KeyC']);
-      const moveSpeed = (player.crouching ? 15 : keys['ShiftLeft'] ? 31 : 24) * dt;
+      player.crouching = !!(keys['ControlLeft'] || keys['KeyC'] || touchState.crouchToggle);
+      const joyMag = Math.hypot(touchState.moveX, touchState.moveY);
+      const isSprinting = keys['ShiftLeft'] || joyMag > 0.82;
+      const moveSpeed = (player.crouching ? 15 : isSprinting ? 31 : 24) * dt;
       const forwardX = Math.sin(player.yaw);
       const forwardZ = -Math.cos(player.yaw);
       const rightX = Math.cos(player.yaw);
@@ -2125,6 +2494,10 @@
       if (keys['KeyS']) { nextX -= forwardX * moveSpeed; nextZ -= forwardZ * moveSpeed; }
       if (keys['KeyD']) { nextX += rightX * moveSpeed; nextZ += rightZ * moveSpeed; }
       if (keys['KeyA']) { nextX -= rightX * moveSpeed; nextZ -= rightZ * moveSpeed; }
+      if (joyMag > 0.08) {
+        nextX += (forwardX * (-touchState.moveY) + rightX * touchState.moveX) * moveSpeed;
+        nextZ += (forwardZ * (-touchState.moveY) + rightZ * touchState.moveX) * moveSpeed;
+      }
 
       const eyeOffset = player.crouching ? 3.8 : 6.2;
       const footY = player.y - eyeOffset;
@@ -2800,7 +3173,12 @@
       }
 
       // 2. Calculate Walk Bob, Horizontal Z-Kickback Recoil & Multi-Stage Reload Kinematics
-      const isMoving = keys['KeyW'] || keys['KeyA'] || keys['KeyS'] || keys['KeyD'];
+      const isMoving =
+        keys['KeyW'] ||
+        keys['KeyA'] ||
+        keys['KeyS'] ||
+        keys['KeyD'] ||
+        Math.hypot(touchState.moveX, touchState.moveY) > 0.12;
       const bobX = isMoving ? Math.cos(nowMs * 0.011) * 0.018 : Math.cos(nowMs * 0.0025) * 0.004;
       const bobY = isMoving ? Math.abs(Math.sin(nowMs * 0.011)) * 0.016 : Math.sin(nowMs * 0.0025) * 0.004;
       player.recoilRoll *= 0.82;

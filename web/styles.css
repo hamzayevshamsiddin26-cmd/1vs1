@@ -613,3 +613,311 @@ html, body {
   font-weight: 700;
   color: var(--cs-amber);
 }
+
+/* ==========================================================================
+   MOBILE & TOUCHSCREEN CONTROLS + RESPONSIVE LAYOUT (ANDROID / IOS)
+   ========================================================================== */
+.mobile-controls-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 14;
+  touch-action: none;
+}
+
+body.touch-enabled .mobile-controls-overlay {
+  display: block;
+}
+
+@media (pointer: coarse), (max-width: 960px) {
+  .mobile-controls-overlay {
+    display: block;
+  }
+}
+
+.mobile-joystick-zone {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 46%;
+  height: 72%;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.mobile-look-zone {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 54%;
+  height: 100%;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.mobile-joystick-base {
+  position: absolute;
+  left: 26px;
+  bottom: 28px;
+  width: 118px;
+  height: 118px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 176, 0, 0.14) 0%, rgba(16, 20, 16, 0.65) 75%);
+  border: 2px solid rgba(255, 176, 0, 0.52);
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.65);
+  pointer-events: none;
+}
+
+.mobile-joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 48px;
+  height: 48px;
+  margin-left: -24px;
+  margin-top: -24px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #ffd25a, #d88c00);
+  border: 2px solid #fff2c6;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.75);
+  transition: transform 0.03s linear;
+}
+
+.mobile-action-btn {
+  position: absolute;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  border-radius: 50%;
+  background: rgba(20, 24, 20, 0.74);
+  border: 2px solid rgba(255, 176, 0, 0.68);
+  color: #ffb000;
+  font-family: 'Consolas', 'Tahoma', monospace;
+  font-weight: 900;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
+}
+
+.mobile-action-btn:active,
+.mobile-action-btn.active {
+  background: rgba(255, 176, 0, 0.88);
+  color: #111411;
+  border-color: #ffffff;
+  transform: scale(0.95);
+}
+
+.mobile-fire-left {
+  left: 34px;
+  bottom: 164px;
+  width: 64px;
+  height: 64px;
+  background: rgba(180, 38, 28, 0.72);
+  border-color: rgba(255, 185, 80, 0.85);
+  color: #fff3d6;
+  font-size: 0.76rem;
+  z-index: 18;
+}
+
+.mobile-action-cluster {
+  position: absolute;
+  right: 18px;
+  bottom: 20px;
+  width: 210px;
+  height: 210px;
+  pointer-events: none;
+  z-index: 18;
+}
+
+.mobile-btn-fire {
+  right: 10px;
+  bottom: 14px;
+  width: 86px;
+  height: 86px;
+  background: radial-gradient(circle, rgba(215, 48, 34, 0.85) 0%, rgba(120, 20, 14, 0.88) 100%);
+  border: 2.5px solid #ffb000;
+  color: #ffffff;
+  font-size: 0.92rem;
+}
+
+.mobile-btn-scope {
+  right: 112px;
+  bottom: 18px;
+  width: 58px;
+  height: 58px;
+}
+
+.mobile-btn-reload {
+  right: 108px;
+  bottom: 88px;
+  width: 56px;
+  height: 56px;
+}
+
+.mobile-btn-jump {
+  right: 12px;
+  bottom: 114px;
+  width: 58px;
+  height: 58px;
+}
+
+.mobile-btn-crouch {
+  right: 78px;
+  bottom: 148px;
+  width: 56px;
+  height: 56px;
+}
+
+@media (max-width: 960px), (max-height: 560px) {
+  #mainMenuScreen {
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cyber-left-sidebar {
+    margin-left: 0;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: auto;
+    padding: 14px 16px;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 176, 0, 0.35);
+  }
+
+  .cyber-logo-wrap {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+  }
+
+  .cyber-logo-main {
+    font-size: 1.55rem;
+  }
+
+  .cyber-logo-edition {
+    font-size: 0.74rem;
+  }
+
+  .cyber-menu-nav {
+    margin-top: 10px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .cyber-nav-item {
+    width: auto;
+    flex: 1 1 calc(33% - 8px);
+    padding: 9px 10px;
+    font-size: 0.8rem;
+    text-align: center;
+    background: rgba(28, 32, 28, 0.85);
+    border: 1px solid rgba(140, 150, 135, 0.35);
+  }
+
+  .menu-status-banner {
+    margin-top: 8px;
+    padding: 6px 10px;
+    font-size: 0.7rem;
+  }
+
+  .cyber-right-panel {
+    margin: 10px 12px 24px 12px;
+    padding: 14px;
+    overflow-y: visible;
+    flex: none;
+  }
+
+  .bottom-right-nav-prompt {
+    display: none;
+  }
+
+  .top-scoreboard {
+    top: 6px;
+    width: min(500px, 64vw);
+    height: 54px;
+    grid-template-columns: 1fr 110px 1fr;
+    padding: 4px 8px;
+  }
+
+  .duelist-name {
+    font-size: 0.62rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .kill-score-box {
+    width: 32px;
+    height: 32px;
+    font-size: 1.05rem;
+  }
+
+  .timer-clock {
+    font-size: 1.0rem;
+  }
+
+  .bottom-left-vitals {
+    left: 158px;
+    bottom: 8px;
+    width: 155px;
+    padding: 6px 8px;
+    z-index: 22;
+  }
+
+  .bottom-left-vitals > div:last-child {
+    display: none;
+  }
+
+  #hudLocalHpBig {
+    font-size: 1.25rem !important;
+  }
+
+  .bottom-right-weapons {
+    left: 50%;
+    right: auto;
+    transform: translateX(-20%);
+    bottom: 8px;
+    width: min(290px, 50vw);
+    padding: 6px 8px;
+    z-index: 22;
+  }
+
+  #hudAmmoMag {
+    font-size: 1.25rem !important;
+  }
+
+  .weapon-slot-pill {
+    padding: 6px 2px;
+    font-size: 0.62rem;
+  }
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
+  .top-scoreboard {
+    top: 44px;
+    width: 94vw;
+  }
+
+  .bottom-left-vitals {
+    left: 12px;
+    bottom: 245px;
+    width: 145px;
+  }
+
+  .bottom-right-weapons {
+    left: auto;
+    right: 12px;
+    transform: none;
+    bottom: 245px;
+    width: 205px;
+  }
+}
