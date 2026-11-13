@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CS 1.6 TACTICAL DUEL — 1VS1 FPS SHOOTER</title>
+  <link rel="stylesheet" href="web/styles.css" />
+</head>
+<body>
+  <!-- Live 3D Tactical Arena & First-Person CS 1.6 Renderer Canvas -->
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- ======================================================================
+       MAIN MENU SCREEN (LEFT-SIDEBAR LAYOUT + COUNTER-STRIKE 1.6 TACTICAL UI)
+       ====================================================================== -->
+  <div id="mainMenuScreen">
+    <!-- Left Tactical Sidebar -->
+    <aside class="cyber-left-sidebar">
+      <div class="cyber-logo-wrap">
+        <div class="cyber-logo-main">COUNTER DUEL</div>
+        <div class="cyber-logo-edition">CS 1.6 TACTICAL EDITION</div>
+      </div>
+
+      <div id="profileMiniStrip" class="profile-mini-strip">
+        LVL 1 // $3500 // 0W - 0L // KILLS: 0
+      </div>
+
+      <!-- Vertical Left-Aligned Menu Buttons -->
+      <nav class="cyber-menu-nav" id="cyberMenuNav">
+        <button class="cyber-nav-item active" data-panel="play1v1">
+          <span class="bracket tl"></span><span class="bracket tr"></span>
+          <span class="bracket bl"></span><span class="bracket br"></span>
+          PLAY 1VS1
+        </button>
+        <button class="cyber-nav-item" data-panel="friendMatch">
+          <span class="bracket tl"></span><span class="bracket tr"></span>
+          <span class="bracket bl"></span><span class="bracket br"></span>
+          FRIEND MATCH
+        </button>
+        <button class="cyber-nav-item" data-panel="shop">
+          <span class="bracket tl"></span><span class="bracket tr"></span>
+          <span class="bracket bl"></span><span class="bracket br"></span>
+          ARMORY SHOP
+        </button>
+        <button class="cyber-nav-item" data-panel="profile">
+          <span class="bracket tl"></span><span class="bracket tr"></span>
+          <span class="bracket bl"></span><span class="bracket br"></span>
+          PLAYER PROFILE
+        </button>
+        <button class="cyber-nav-item" data-panel="settings">
+          <span class="bracket tl"></span><span class="bracket tr"></span>
+          <span class="bracket bl"></span><span class="bracket br"></span>
+          SETTINGS
+        </button>
+      </nav>
+
+      <div id="menuStatusBanner" class="menu-status-banner">
+        SERVER READY // SELECT A MAP OR MODE TO DEPLOY
+      </div>
+    </aside>
+
+    <!-- Right Interactive Content Panel -->
+    <main class="cyber-right-panel" id="rightModalContent"></main>
+
+    <!-- Bottom-Right Controller/Keyboard Prompt -->
+    <div class="bottom-right-nav-prompt">
+      <div><span class="prompt-dpad">┼</span>NAVIGATE</div>
+      <div><span class="prompt-badge">✕</span>SELECT</div>
+    </div>
+  </div>
+
+  <!-- ======================================================================
+       IN-GAME COUNTER-STRIKE 1.6 1VS1 HUD
+       ====================================================================== -->
+  <div id="hudScreen" class="hidden">
+    <!-- Top Scoreboard: Both Players' 100 HP Bars, Kill Counter & 02:00 Map Rotation Timer -->
+    <header class="top-scoreboard">
+      <div class="duelist-side left">
+        <div class="duelist-info">
+          <div class="duelist-name" id="hudP1Name">CT // OPERATIVE (YOU)</div>
+          <div class="hp-bar-outer">
+            <div class="hp-bar-fill" id="hudP1HpBar" style="width: 100%;"></div>
+            <div class="hp-bar-text" id="hudP1HpText">100 / 100 HP</div>
+          </div>
+        </div>
+        <div class="kill-score-box" id="hudP1Kills">0</div>
+      </div>
+
+      <div class="arena-timer-center">
+        <div class="timer-label">MAP ROTATION</div>
+        <div class="timer-clock" id="hudArenaTimer">02:00</div>
+        <div class="timer-arena-name" id="hudArenaName">DE_DUST2</div>
+        <div class="timer-label" id="hudWinGoal" style="color:#b8c2b4; margin-top:2px;">FIRST TO 10 KILLS</div>
+      </div>
+
+      <div class="duelist-side right">
+        <div class="duelist-info">
+          <div class="duelist-name" id="hudP2Name">T // PHOENIX FORCE</div>
+          <div class="hp-bar-outer">
+            <div class="hp-bar-fill" id="hudP2HpBar" style="width: 100%;"></div>
+            <div class="hp-bar-text" id="hudP2HpText">100 / 100 HP</div>
+          </div>
+        </div>
+        <div class="kill-score-box" id="hudP2Kills">0</div>
+      </div>
+    </header>
+
+    <!-- Top-Left Return to Menu Button -->
+    <button id="btnLeaveMatch" class="cyber-btn" style="position:absolute; top:12px; left:16px; pointer-events:auto; padding:7px 12px; font-size:0.74rem;">
+      [M] MAIN MENU
+    </button>
+
+    <!-- Top-Right Kill Feed -->
+    <div id="killFeedList"></div>
+
+    <!-- Center Dynamic CS 1.6 Green Crosshair & Hitmarker -->
+    <div id="crosshairWrap">
+      <div class="ch-line top" id="chTop"></div>
+      <div class="ch-line bottom" id="chBottom"></div>
+      <div class="ch-line left" id="chLeft"></div>
+      <div class="ch-line right" id="chRight"></div>
+    </div>
+    <div id="sniperScopeOverlay" class="hidden">
+      <div style="position:absolute; top:50%; left:50%; width:6px; height:6px; background:#e02020; border-radius:50%; transform:translate(-50%,-50%);"></div>
+    </div>
+    <div id="hitmarkerOverlay" class="hidden">
+      <svg width="24" height="24" viewBox="0 0 24 24">
+        <line x1="3" y1="3" x2="9" y2="9" stroke="#ffb000" stroke-width="2" id="hmLine1"/>
+        <line x1="21" y1="3" x2="15" y2="9" stroke="#ffb000" stroke-width="2" id="hmLine2"/>
+        <line x1="3" y1="21" x2="9" y2="15" stroke="#ffb000" stroke-width="2" id="hmLine3"/>
+        <line x1="21" y1="21" x2="15" y2="15" stroke="#ffb000" stroke-width="2" id="hmLine4"/>
+      </svg>
+    </div>
+    <div id="headshotPopText" style="position:absolute; top:54%; left:50%; transform:translateX(-50%); font-family:Consolas,monospace; font-weight:900; font-size:0.92rem; color:#ffb000; text-shadow:1px 1px 2px #000;"></div>
+
+    <!-- Bottom-Left Classic CS 1.6 Amber Health & Kevlar Readout -->
+    <div class="bottom-left-vitals">
+      <div style="display:flex; justify-content:space-between; align-items:baseline; font-family:Consolas,monospace;">
+        <div>
+          <span style="color:#ffb000; font-size:1.35rem; font-weight:900;">✚</span>
+          <span id="hudLocalHpBig" style="font-size:1.95rem; font-weight:900; color:#ffb000;">100</span>
+        </div>
+        <div>
+          <span style="color:#ffb000; font-size:1.15rem; font-weight:900;">🛡 100</span>
+        </div>
+      </div>
+      <div class="hp-bar-outer" style="margin-top:5px;">
+        <div class="hp-bar-fill" id="hudLocalHpBar" style="width: 100%; background:#ffb000;"></div>
+      </div>
+      <div style="margin-top:6px; font-family:Consolas,monospace; font-size:0.66rem; color:#a2aca0;">
+        WASD: MOVE | SPACE: JUMP | CTRL: CROUCH | LMB: FIRE | RMB: SCOPE | R: RELOAD
+      </div>
+    </div>
+
+    <!-- Bottom-Right Classic CS 1.6 Weapon & Ammo Readout -->
+    <div class="bottom-right-weapons">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span id="hudWeaponName" style="font-family:Consolas,monospace; font-weight:900; font-size:0.92rem; color:#ffb000;">CV-47 (AK-47)</span>
+        <span id="hudReloadStatus" style="font-family:Consolas,monospace; font-size:0.74rem; color:#c8d0c4;">[R] RELOAD</span>
+      </div>
+      <div style="margin-top:3px; display:flex; align-items:baseline; gap:8px; font-family:Consolas,monospace;">
+        <span id="hudAmmoMag" style="font-size:1.95rem; font-weight:900; color:#ffb000;">30</span>
+        <span id="hudAmmoReserve" style="font-size:1.15rem; font-weight:700; color:#c29028;">| 90</span>
+      </div>
+      <div class="weapon-slots-row" id="hudWeaponSlots"></div>
+    </div>
+
+    <!-- Smooth 120-Second Arena Rotation Overlay -->
+    <div id="arenaRotationOverlay" class="hidden">
+      <div class="arena-rotation-box">
+        <div style="font-size:1.4rem; font-weight:900; color:#ffb000; letter-spacing:0.06em;" id="rotOverlayTitle">
+          MAP CHANGING // 02:00 ROTATION
+        </div>
+        <div style="font-size:0.95rem; font-weight:700; color:#d8ded6; margin-top:8px;" id="rotOverlaySub">
+          DEPLOYING TO NEXT TACTICAL SECTOR...
+        </div>
+        <div style="font-family:Consolas,monospace; font-size:0.86rem; color:#7ad96c; margin-top:12px;" id="rotOverlayHp">
+          BOTH PLAYERS' HP & SCORE PRESERVED
+        </div>
+      </div>
+    </div>
+
+    <!-- Match Victory / Defeat Summary Overlay -->
+    <div id="matchEndOverlay" class="hidden">
+      <div class="arena-rotation-box">
+        <div id="matchEndTitle" style="font-size:2.0rem; font-weight:900; color:#ffb000;">COUNTER-TERRORISTS WIN!</div>
+        <div id="matchEndSub" style="font-family:Consolas,monospace; font-size:0.92rem; color:#d8ded6; margin:12px 0 18px 0;"></div>
+        <button id="btnMatchEndReturn" class="cyber-btn">RETURN TO MAIN MENU</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="web/game.js"></script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+{
+  "name": "NEON_DUEL_1VS1_FPS",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Modules": {
+        "$path": "src/ReplicatedStorage/Modules"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "$path": "src/ServerScriptService"
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "$path": "src/StarterPlayer/StarterPlayerScripts"
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Ambient": [0.05, 0.06, 0.12],
+        "OutdoorAmbient": [0.08, 0.09, 0.18],
+        "Brightness": 2.0,
+        "ClockTime": 0.0,
+        "ColorShift_Top": [0.2, 0.6, 1.0],
+        "ColorShift_Bottom": [0.45, 0.15, 0.75],
+        "GlobalShadows": true
+      }
+    }
+  }
+}
+

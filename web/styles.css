@@ -1,0 +1,615 @@
+/* ==========================================================================
+   CS 1.6 TACTICAL EDITION — 1VS1 FPS SHOOTER
+   Clean Military / Counter-Strike 1.6 Aesthetic (No Rainbow/Neon Colors)
+   ========================================================================== */
+
+:root {
+  --cs-amber: #ffb000;
+  --cs-amber-dim: rgba(255, 176, 0, 0.72);
+  --cs-green: #42e642;
+  --cs-ct-blue: #5889b8;
+  --cs-t-tan: #c88746;
+  --cs-red: #d93838;
+  --cs-steel: #c8d0d8;
+  --cs-panel: rgba(22, 25, 28, 0.88);
+  --cs-panel-dark: rgba(14, 16, 18, 0.92);
+  --cs-border: rgba(140, 150, 135, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #111315;
+  font-family: 'Tahoma', 'Verdana', 'Segoe UI', Arial, sans-serif;
+  color: #e4e8ec;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#gameCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   MAIN MENU OVERLAY (LEFT-SIDEBAR LAYOUT WITH TACTICAL CS 1.6 STYLING)
+   ========================================================================== */
+#mainMenuScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  pointer-events: auto;
+  background: linear-gradient(
+    90deg,
+    rgba(12, 14, 16, 0.85) 0%,
+    rgba(12, 14, 16, 0.45) 45%,
+    rgba(12, 14, 16, 0.65) 100%
+  );
+}
+
+.cyber-left-sidebar {
+  position: relative;
+  margin-left: 5vw;
+  width: 30vw;
+  min-width: 330px;
+  max-width: 430px;
+  height: 100vh;
+  background: rgba(20, 23, 26, 0.90);
+  backdrop-filter: blur(6px);
+  border-left: 1px solid rgba(160, 168, 155, 0.3);
+  border-right: 1px solid rgba(160, 168, 155, 0.3);
+  display: flex;
+  flex-direction: column;
+  padding: 6vh 2.2vw 4vh 2.2vw;
+  box-shadow: 0 0 45px rgba(0, 0, 0, 0.75);
+}
+
+.cyber-logo-wrap {
+  position: relative;
+  margin-bottom: 2vh;
+  border-bottom: 2px solid var(--cs-amber);
+  padding-bottom: 12px;
+}
+
+.cyber-logo-main {
+  font-family: 'Impact', 'Arial Black', 'Tahoma', sans-serif;
+  font-size: clamp(2.1rem, 2.9vw, 3.0rem);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.0;
+  color: #f0f2f4;
+  text-shadow: 2px 2px 0px #000000;
+}
+
+.cyber-logo-edition {
+  margin-top: 4px;
+  font-family: 'Consolas', 'Tahoma', monospace;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--cs-amber);
+  text-transform: uppercase;
+}
+
+.profile-mini-strip {
+  margin-top: 1.2vh;
+  font-family: 'Consolas', monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  color: #d0d6dc;
+  padding: 8px 10px;
+  background: rgba(12, 14, 16, 0.85);
+  border: 1px solid var(--cs-border);
+  border-left: 3px solid var(--cs-amber);
+}
+
+/* Left-Aligned Menu Buttons (Clean Tactical Highlight + Corner Brackets) */
+.cyber-menu-nav {
+  margin-top: 3vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1vh;
+}
+
+.cyber-nav-item {
+  position: relative;
+  width: 100%;
+  padding: 12px 18px;
+  background: transparent;
+  border: 1px solid transparent;
+  text-align: left;
+  font-family: 'Tahoma', 'Consolas', sans-serif;
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #c6cdd4;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.cyber-nav-item:hover,
+.cyber-nav-item.active {
+  background: rgba(62, 68, 56, 0.72);
+  border-color: rgba(255, 176, 0, 0.45);
+  color: var(--cs-amber);
+}
+
+.cyber-nav-item .bracket {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: var(--cs-amber);
+  border-style: solid;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  pointer-events: none;
+}
+
+.cyber-nav-item:hover .bracket,
+.cyber-nav-item.active .bracket {
+  opacity: 1;
+}
+
+.bracket.tl { top: -2px; left: -2px; border-width: 2px 0 0 2px; }
+.bracket.tr { top: -2px; right: -2px; border-width: 2px 2px 0 0; }
+.bracket.bl { bottom: -2px; left: -2px; border-width: 0 0 2px 2px; }
+.bracket.br { bottom: -2px; right: -2px; border-width: 0 2px 2px 0; }
+
+.menu-status-banner {
+  margin-top: auto;
+  padding: 10px 12px;
+  font-family: 'Consolas', monospace;
+  font-size: 0.78rem;
+  color: var(--cs-amber);
+  background: rgba(12, 14, 16, 0.9);
+  border: 1px solid var(--cs-border);
+}
+
+/* Classic CS 1.6 Olive/Charcoal Right Window */
+.cyber-right-panel {
+  flex: 1;
+  margin: 7vh 4.5vw 8vh 3vw;
+  background: rgba(28, 32, 28, 0.92);
+  border: 2px solid #5c6458;
+  box-shadow: inset 0 0 0 1px #1a1e1a, 0 12px 36px rgba(0, 0, 0, 0.8);
+  padding: 22px 26px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.panel-header {
+  border-bottom: 1px solid #5c6458;
+  padding-bottom: 10px;
+  margin-bottom: 16px;
+}
+
+.panel-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--cs-amber);
+}
+
+.panel-subtitle {
+  font-family: 'Consolas', monospace;
+  font-size: 0.8rem;
+  color: #a8b2a6;
+  margin-top: 4px;
+}
+
+.bottom-right-nav-prompt {
+  position: fixed;
+  right: 36px;
+  bottom: 22px;
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #d0d6dc;
+}
+
+.prompt-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--cs-amber);
+  color: #111;
+  font-weight: 900;
+  margin-right: 7px;
+  font-size: 0.75rem;
+}
+
+.prompt-dpad {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 6px;
+  color: var(--cs-amber);
+  font-size: 1.1rem;
+}
+
+/* CS 1.6 Tactical Buttons */
+.cyber-btn {
+  padding: 11px 16px;
+  background: #2b3129;
+  border: 1px solid #6c7666;
+  color: #eaeeec;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  text-transform: uppercase;
+}
+
+.cyber-btn:hover {
+  background: #3e473b;
+  border-color: var(--cs-amber);
+  color: var(--cs-amber);
+}
+
+.cyber-btn.magenta,
+.cyber-btn.green {
+  background: #252b24;
+  border-color: #7c8776;
+}
+.cyber-btn.magenta:hover,
+.cyber-btn.green:hover {
+  background: var(--cs-amber);
+  border-color: var(--cs-amber);
+  color: #121412;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.cyber-card {
+  background: rgba(18, 21, 18, 0.92);
+  border: 1px solid #4e564a;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.stat-box {
+  background: rgba(18, 21, 18, 0.94);
+  border: 1px solid #4e564a;
+  padding: 10px;
+  text-align: center;
+}
+
+.stat-val {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--cs-amber);
+}
+
+.stat-lbl {
+  font-family: 'Consolas', monospace;
+  font-size: 0.72rem;
+  color: #9aa498;
+  margin-top: 3px;
+}
+
+/* ==========================================================================
+   IN-GAME COUNTER-STRIKE 1.6 HUD
+   ========================================================================== */
+#hudScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+}
+
+/* Top Scoreboard: CT vs T 100 HP Bars, Round Kills & 02:00 Arena Rotation Timer */
+.top-scoreboard {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(720px, 90vw);
+  height: 74px;
+  background: rgba(16, 18, 16, 0.86);
+  border: 1px solid #586054;
+  display: grid;
+  grid-template-columns: 1fr 165px 1fr;
+  align-items: center;
+  padding: 6px 14px;
+}
+
+.duelist-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.duelist-side.right {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.duelist-info {
+  flex: 1;
+}
+
+.duelist-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #78a8d8; /* CT Steel Blue */
+  margin-bottom: 4px;
+}
+
+.duelist-side.right .duelist-name {
+  color: #e09f5a; /* T Desert Tan */
+}
+
+.hp-bar-outer {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  background: #141614;
+  border: 1px solid #444a42;
+  overflow: hidden;
+}
+
+.hp-bar-fill {
+  height: 100%;
+  width: 100%;
+  background: #4a7eb3;
+  transition: width 0.12s ease;
+}
+
+.duelist-side.right .hp-bar-fill {
+  background: #b87333;
+}
+
+.hp-bar-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Consolas', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 1px 1px 1px #000;
+}
+
+.kill-score-box {
+  width: 46px;
+  height: 46px;
+  background: #121412;
+  border: 1px solid #586054;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Consolas', monospace;
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: var(--cs-amber);
+}
+
+.duelist-side.right .kill-score-box {
+  border-color: #586054;
+  color: var(--cs-amber);
+}
+
+.arena-timer-center {
+  text-align: center;
+  background: #121412;
+  border-left: 1px solid #444a42;
+  border-right: 1px solid #444a42;
+  padding: 4px 6px;
+}
+
+.timer-label {
+  font-family: 'Consolas', monospace;
+  font-size: 0.62rem;
+  color: #9aa498;
+}
+
+.timer-clock {
+  font-family: 'Consolas', monospace;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--cs-amber);
+  letter-spacing: 0.05em;
+}
+
+.timer-arena-name {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #d0d6CE;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Classic CS 1.6 Bottom-Left Amber Health & Armor Readout */
+.bottom-left-vitals {
+  position: absolute;
+  left: 20px;
+  bottom: 18px;
+  width: 280px;
+  background: rgba(16, 18, 16, 0.82);
+  border: 1px solid #4e564a;
+  padding: 10px 14px;
+}
+
+/* Classic CS 1.6 Bottom-Right Weapon & Ammo Readout */
+.bottom-right-weapons {
+  position: absolute;
+  right: 20px;
+  bottom: 18px;
+  width: 340px;
+  background: rgba(16, 18, 16, 0.82);
+  border: 1px solid #4e564a;
+  padding: 10px 14px;
+  pointer-events: auto;
+}
+
+.weapon-slots-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.weapon-slot-pill {
+  background: #181b18;
+  border: 1px solid #444a42;
+  padding: 5px 2px;
+  text-align: center;
+  font-family: 'Consolas', monospace;
+  font-size: 0.65rem;
+  color: #9aa498;
+  cursor: pointer;
+}
+
+.weapon-slot-pill.active {
+  background: #2e362b;
+  border-color: var(--cs-amber);
+  color: var(--cs-amber);
+  font-weight: 700;
+}
+
+/* Classic CS 1.6 Green 4-Line Crosshair */
+#crosshairWrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 2px;
+  background: transparent;
+}
+
+.ch-line {
+  position: absolute;
+  background: var(--cs-green);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.9);
+  transition: all 0.04s linear;
+}
+.ch-line.top { width: 2px; height: 9px; left: 0px; top: -13px; }
+.ch-line.bottom { width: 2px; height: 9px; left: 0px; top: 6px; }
+.ch-line.left { width: 9px; height: 2px; top: 0px; left: -13px; }
+.ch-line.right { width: 9px; height: 2px; top: 0px; left: 6px; }
+
+/* Authentic CS 1.6 AWP Sniper Scope Overlay */
+#sniperScopeOverlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 240px, #000000 248px);
+}
+
+#sniperScopeOverlay::before,
+#sniperScopeOverlay::after {
+  content: '';
+  position: absolute;
+  background: #000000;
+}
+#sniperScopeOverlay::before {
+  top: 50%; left: 0; right: 0; height: 2px;
+}
+#sniperScopeOverlay::after {
+  left: 50%; top: 0; bottom: 0; width: 2px;
+}
+
+#hitmarkerOverlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+}
+
+#arenaRotationOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 12, 10, 0.76);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 25;
+}
+
+#matchEndOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 12, 10, 0.86);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 30;
+  pointer-events: auto;
+}
+
+.arena-rotation-box {
+  width: min(580px, 90vw);
+  padding: 24px;
+  background: #1e231d;
+  border: 2px solid #6c7666;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.85);
+}
+
+#killFeedList {
+  position: absolute;
+  top: 94px;
+  right: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+.kill-feed-item {
+  background: rgba(16, 18, 16, 0.85);
+  border: 1px solid #4a5246;
+  padding: 4px 10px;
+  font-family: 'Tahoma', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--cs-amber);
+}
