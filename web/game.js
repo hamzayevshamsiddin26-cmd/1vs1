@@ -388,11 +388,6 @@
   function saveProfile() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-      fetch('/api/datastore', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerId: profile.name, profile }),
-      }).catch(() => {});
     } catch (_) {}
     updateProfileStrip();
   }

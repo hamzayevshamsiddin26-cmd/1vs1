@@ -12,7 +12,15 @@ const path = require('path');
 const { exec } = require('child_process');
 
 if (process.argv.includes('--check')) {
-  console.log('Build check passed: NEON DUEL 2.0 ready.');
+  const requiredFiles = ['index.html', 'web/styles.css', 'web/game.js'];
+  for (const rel of requiredFiles) {
+    const full = path.join(__dirname, rel);
+    if (!fs.existsSync(full)) {
+      console.error(`Missing required static file: ${rel}`);
+      process.exit(1);
+    }
+  }
+  console.log('Build check passed: Static files verified.');
   process.exit(0);
 }
 
@@ -47,7 +55,17 @@ function saveDataStore() {
 }
 
 const server = http.createServer((req, res) => {
-  const parsedUrl = new URL(req.url, `http://localhost:${PORT}`);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  const parsedUrl = new URL(req.url || '/', `http://localhost:${PORT}`);
   const pathname = decodeURIComponent(parsedUrl.pathname);
 
   // Server-side DataStore API (saves & loads player profile & leaderboard)
@@ -78,11 +96,11 @@ const server = http.createServer((req, res) => {
   }
 
   // Serve Static Files
-  let safeRel = pathname === '/' ? '/index.html' : pathname;
+  let safeRel = (pathname === '/' ? 'index.html' : pathname).replace(/^[/\\]+/, '');
   safeRel = path.normalize(safeRel).replace(/^(\.\.(\/|\\|$))+/, '');
-  const filePath = path.join(ROOT_DIR, safeRel);
+  const filePath = path.resolve(ROOT_DIR, safeRel);
 
-  if (!filePath.startsWith(ROOT_DIR)) {
+  if (!filePath.startsWith(path.resolve(ROOT_DIR))) {
     res.writeHead(403);
     res.end('Forbidden');
     return;
@@ -114,7 +132,7 @@ function listenOnAvailablePort(startPort) {
     }
   });
 
-  server.listen(startPort, () => {
+  server.listen(startPort, '0.0.0.0', () => {
     const url = `http://localhost:${startPort}`;
     console.log('\n============================================================');
     console.log('  NEON DUEL — EDITION 2.0 (1VS1 CYBERPUNK FPS SHOOTER)');
